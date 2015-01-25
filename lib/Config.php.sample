@@ -10,7 +10,7 @@ date_default_timezone_set('EST');
 
 class Config {
     const DEBUG = false;
-    const THROW_EXCEPTIONS = true;
+    const THROW_EXCEPTIONS = false;
     const LOG_LEVEL = 3;
 
     const LOG_DATE_FORMAT = DATE_RFC822;

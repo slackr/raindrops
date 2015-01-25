@@ -21,7 +21,7 @@ class Authentication extends Identity {
     public $challenge = null;
 
     /**
-     * @var string this.generate_token() stores the result here
+     * @var string this.generate_auth_token() stores the result here
      */
     public $token = null;
 
@@ -169,34 +169,34 @@ class Authentication extends Identity {
      * Generates a token containing a timed value
      * It will be joined by a TOKEN_SEPARATOR
      *
-     * Tokens:
+     * Token contain:
      * timestamp => this will be used for timed verification, should be first
      * ip => ip of client, something the client cannot forge easily
      *
      * @see Authentication::$token
      *
+     * @param array $seed An array to seed into new token ($_SERVER['REMOVE_ADDR'] for example)
+     *
      * @return void
      */
-    public function generate_auth_token() {
-        $seed = array(
-            time(),
-            $_SERVER['REMOTE_ADDR'],
-        );
+    public function generate_auth_token($seed) {
+        array_unshift($seed, time());
 
         $this->token = join(AuthenticationConfig::TOKEN_SEPARATOR, $seed);
         $this->log("New token generated: '". $this->token ."'", 1);
     }
 
-    /**
+    /****
      * A string token separated by TOKEN_SEPARATOR
      *
-     * @see Authentication::generate_token()
+     * @see Authentication::generate_auth_token()
      *
      * @param string $token Token containing a timestamp and any other validation data
+     * @param array $seed An array to seed into new token ($_SERVER['REMOVE_ADDR'] for example)
      *
      * @return bool
      */
-    public function verify_auth_token($token) {
+    public function verify_auth_token($token, $seed) {
         $pieces = explode(AuthenticationConfig::TOKEN_SEPARATOR, $token);
         $timestamp = (int)$pieces[0];
         array_shift($pieces);
@@ -211,7 +211,7 @@ class Authentication extends Identity {
             return false;
         }
 
-        $this->generate_auth_token();
+        $this->generate_auth_token($seed);
 
         $new_pieces = explode(AuthenticationConfig::TOKEN_SEPARATOR, $this->token);
         array_shift($new_pieces);

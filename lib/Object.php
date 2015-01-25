@@ -35,7 +35,7 @@ class Object {
             $this->log_entries[] = $entry;
 
             if ($level >= Object::LOG_ERROR && Config::THROW_EXCEPTIONS == true) {
-                throw new Exception($msg, $custom_error_code);
+                throw new \Exception($msg, $custom_error_code);
             }
         }
     }

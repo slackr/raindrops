@@ -14,30 +14,27 @@ class SessionHandler extends Object {
     public $id = null;
     public $realm = null;
     public $session_id = null;
+    public $session_ip = null;
 
-    public function __construct(& $db, $realm = null, $session_id = null) {
+    public function __construct(& $db, $realm = null, $session_id = null, $session_ip = null) {
         $this->db = $db;
         $this->realm = $realm;
         $this->session_id = $session_id;
+        $this->session_ip = $session_ip;
     }
 
     public function verify() {
+        $seed = array($this->session_ip);
+
         $this->id = null;
 
         if ($this->session_id != null) {
             session_id($this->session_id);
         }
 
- 		if ($_GET['logged_in']) { // temp for dev
-			$_SESSION['rd_auth_identity'] = $_GET['logged_in'];
-            $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
-			$auth->generate_auth_token();
-			$_SESSION['rd_auth_token'] = $auth->token;
-		}
-
         if (isset($_SESSION['rd_auth_identity'])) {
             $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
-            if ($auth->verify_auth_token($_SESSION['rd_auth_token'])) {
+            if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
                 $_SESSION['rd_auth_token'] = $auth->token; // update token to renew timestamp
 
 				$this->id = new \Raindrops\Identity($this->db, $_SESSION['rd_auth_identity'], $this->realm);

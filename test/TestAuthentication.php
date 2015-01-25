@@ -49,15 +49,15 @@ $sfa_invalid = new Authentication($db, "invalid!", "badidrealm");
 $sfa_invalid->get_identity();
 assert('$sfa_invalid->sanity_check() == false', 'Input should not be valid for Auth object');
 
-$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
-$sfa->generate_auth_token();
+$seed = array('127.0.0.1');
+$sfa->generate_auth_token($seed);
 $expired_token = '123'.\Raindrops\AuthenticationConfig::TOKEN_SEPARATOR.'127.0.0.1';
 $baddata_token = time().\Raindrops\AuthenticationConfig::TOKEN_SEPARATOR.'127.0.0.2';
 $good_token = $sfa->token;
 
-$check_expired = $sfa->verify_auth_token($expired_token);
-$check_baddata = $sfa->verify_auth_token($baddata_token);
-$check_good = $sfa->verify_auth_token($good_token);
+$check_expired = $sfa->verify_auth_token($expired_token, $seed);
+$check_baddata = $sfa->verify_auth_token($baddata_token, $seed);
+$check_good = $sfa->verify_auth_token($good_token, $seed);
 assert('$check_expired == false', 'Expired token should have failed verification');
 assert('$check_baddata == false', 'Bad data token should have failed verification');
 assert('$check_good == true', 'Good token did not verify');
