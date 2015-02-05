@@ -16,6 +16,8 @@ class Object {
 
     protected $db = null;
 
+    public $log_name = null;
+
     protected $log_levels = array(
         Object::LOG_DEBUG => 'debug',
         Object::LOG_INFO => 'info',
@@ -29,7 +31,7 @@ class Object {
 
         if ($level >= Config::LOG_LEVEL) {
             $entry = date(Config::LOG_DATE_FORMAT) .' - '
-                    . strtoupper($this->log_levels[$level]) .': '
+                    . strtoupper($this->log_levels[$level]) . ($this->log_name ? '(' . $this->log_name . '): ' : ': ')
                     . $msg;
 
             $this->log_entries[] = $entry;
