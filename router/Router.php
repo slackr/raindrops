@@ -9,8 +9,8 @@
 require_once (__DIR__).'/../lib/Object.php';
 
 class Router extends Object {
-    private $request_action = null;
-    private $routes = array();
+    public $request_action = null;
+    public $routes = array();
 
     public function __construct() {
         $get = explode('/', substr($_SERVER['REDIRECT_URL'], 1));
