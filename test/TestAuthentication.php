@@ -16,6 +16,7 @@ EOF;
 
 $realm = 'slacknet';
 $id = 'test';
+$device = 'dev';
 
 $sfc = new Crypto();
 $db = new Database('mysql');
@@ -24,12 +25,13 @@ $db->connect();
 $sfa = new Authentication($db, $id, $realm);
 $sfa->get_identity();
 
-$sfa->create_challenge();
+$sfa->create_challenge($device);
 $response = array(
     'nonce' => $sfa->challenge,
     'nonce_identity' => 'test',
     'nonce_signature' => $sfc->sign($sfa->challenge, $privkey),
     'realm' => 'badrealm',
+    'device' => $device,
 );
 
 $verify = $sfa->verify_challenge_response($response);
@@ -40,12 +42,14 @@ $response = array(
     'nonce_identity' => 'test',
     'nonce_signature' => $sfc->sign($sfa->challenge, $privkey),
     'realm' => $sfa->realm,
+    'device' => $device,
 );
 
 $verify = $sfa->verify_challenge_response($response);
 assert('$verify == true', 'Challenge did not verify');
 
 $sfa_invalid = new Authentication($db, "invalid!", "badidrealm");
+$sfa_invalid->email = 'invalid!@email';
 $sfa_invalid->get_identity();
 assert('$sfa_invalid->sanity_check() == false', 'Input should not be valid for Auth object');
 

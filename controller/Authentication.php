@@ -41,28 +41,37 @@ class Authentication extends Identity {
     }
 
     /**
-     * Create a challenge for the identity and store in database
+     * Create a challenge for the identity and store in database.
+     *
+     * A device name must be specified to tie the challenge to a pubkey for the identity
      *
      * @see Authentication::$challenge
      *
+     * @param string $device Which device to generate challenge for
      * @param array $seed (optional) Array to use as seed for nonce
      *
      * @return bool
      */
-    public function create_challenge($seed = array()) {
+    public function create_challenge($device, $seed = array()) {
+        if (! isset($this->pubkeys[$device])) {
+            $this->log("No pubkey associated with device: '" . $device . "' for '". $this->identity_tostring() ."'", 3);
+            return false;
+        }
+
         $crypto = new Crypto();
         $timestamp = date(Config::DATE_FORMAT);
 
         $crypto->generate_nonce($this->identity, $seed);
 
         $query = "insert into ". AuthenticationConfig::DB_TABLE_NONCE_HISTORY
-                ." values (:id, :nonce, :nonce_identity, :timestamp, :realm)";
+                ." values (:id, :nonce, :nonce_identity, :timestamp, :realm, :device)";
         $params = array(
             ':id' => null,
             ':nonce' => $crypto->nonce,
             ':nonce_identity' => $this->identity,
             ':timestamp' => $timestamp,
             ':realm' => $this->realm,
+            ':device' => $device,
         );
 
         if ($this->db->query($query, $params)) {
@@ -70,7 +79,8 @@ class Authentication extends Identity {
                 "Successfully saved challenge for "
                 ."'". $this->identity_tostring() ."', "
                 ."nonce: '". $crypto->nonce ."', "
-                ."timestamp: '". $timestamp ."'"
+                ."timestamp: '". $timestamp ."', "
+                ."device: '". $device ."'"
             , 1);
 
             $this->challenge = $crypto->nonce;
@@ -96,17 +106,25 @@ class Authentication extends Identity {
      * @return bool
      */
     public function verify_challenge_response($response) {
+        if (! isset($this->pubkeys[$response['device']])) {
+            $this->log("No pubkey associated with device: '" . $response['device'] . "' for '". $this->identity_tostring() ."'", 3);
+            return false;
+        }
+
+        $pubkey = $this->pubkeys[$response['device']];
+
         $crypto = new Crypto();
         $valid = false;
 
         $query = "select * from ". AuthenticationConfig::DB_TABLE_NONCE_HISTORY
-                ." where nonce = :nonce and nonce_identity = :nonce_identity and realm = :realm"
+                ." where nonce = :nonce and nonce_identity = :nonce_identity and realm = :realm and device = :device"
                 ." order by id desc";
 
         $params = array(
             ':nonce' => $response['nonce'],
             ':nonce_identity' => $response['nonce_identity'],
             ':realm' => $response['realm'],
+            ':device' => $response['device'],
         );
 
         $this->db->query($query, $params, $limit = 1);
@@ -117,11 +135,11 @@ class Authentication extends Identity {
             $nonce_timestamp = strtotime($row['timestamp']);
 
             if ($nonce_timestamp >= $timeframe) {
-                $this->log("Found nonce for '". $response['nonce_identity'] ."@". $response['realm'] ."' within acceptable timeframe, nonce: '". $response['nonce'] ."'", 1);
+                $this->log("Found nonce for device: '". $response['device'] ."', '". $response['nonce_identity'] ."@". $response['realm'] ."' within acceptable timeframe, nonce: '". $response['nonce'] ."'", 1);
 
-                if ($crypto->verify_signature($response['nonce'], $response['nonce_signature'], $this->pubkey)) {
+                if ($crypto->verify_signature($response['nonce'], $response['nonce_signature'], $pubkey)) {
                     $valid = true;
-                    $this->log("Authentication for '". $response['nonce_identity'] ."@". $response['realm'] ."' successful. Nonce signature was valid.", 1);
+                    $this->log("Authentication for device: '". $response['device'] ."', '". $response['nonce_identity'] ."@". $response['realm'] ."' successful. Nonce signature was valid.", 1);
 
                     $this->delete_challenge($row['id']);
                 } else {
@@ -132,12 +150,12 @@ class Authentication extends Identity {
                     , 3);
                 }
             } else {
-                $this->log("Time expired for nonce: '". $response['nonce'] ."', identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'", 1);
+                $this->log("Time expired for nonce: '". $response['nonce'] ."', device: '". $response['device'] ."', identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'", 1);
 
                 $this->delete_challenge($row['id']);
             }
         } else {
-            $this->log("No nonce found for identity: '". $response['nonce_identity'] ."@". $response['realm'] ."' within acceptable timeframe", 1);
+            $this->log("No nonce found for identity: '". $response['nonce_identity'] ."@". $response['realm'] ."', device: '". $response['device'] ."', within acceptable timeframe", 1);
         }
 
         return $valid;

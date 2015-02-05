@@ -13,8 +13,9 @@ require_once (__DIR__).'/../lib/AuthenticationConfig.php';
 class Identity extends Object {
     public $id = null;
     public $realm = null;
+    public $email = null;
     public $identity = null;
-    public $pubkey = null;
+    public $pubkeys = null;
 
     public function __construct(& $db, $identity, $realm, $id = 0) {
         $this->db = $db;
@@ -24,7 +25,7 @@ class Identity extends Object {
     }
 
     public function identity_tostring() {
-        return  "(n:". $this->identity .",r:". $this->realm .",i:". $this->id .")";
+        return "(n:". $this->identity .",r:". $this->realm .",i:". $this->id .")";
     }
 
     public function get_identity() {
@@ -52,24 +53,30 @@ class Identity extends Object {
         $this->db->query($query, $params, $limit = 1);
         $row = $this->db->fetch();
         if (isset($row['identity'])) {
-            $crypto = new Crypto();
+            $this->pubkeys = array();
 
-            $row['pubkey'] = $crypto->fix_pem_format($row['pubkey']);
-            if ($crypto->validate_key($row['pubkey'], 'public')) {
-                $this->pubkey = $row['pubkey'];
-                $this->identity = $row['identity'];
-                $this->realm = $row['realm'];
-                $this->id = (int)$row['id'];
+            $query_keys = "select * from ". AuthenticationConfig::DB_TABLE_KEYS;
+            $query_keys .= " where identity_id = :identity_id order by id desc";
+            $params_keys = array(
+                ':identity_id' => $row['id'],
+            );
 
-                $this->log("Identity data for '". $this->identity_tostring() ."' retrieved", 1);
-                return true;
+            if ($this->db->query($query_keys, $params_keys)) {
+                while ($row_keys = $this->db->fetch()) {
+                    $this->pubkeys[$row_keys['device']] = $row_keys['pubkey'];
+                }
             } else {
-                $this->log(
-                    "Invalid identity data for '". $this->identity_tostring() ."' retrieved"
-                    .", crypto-log: '". join("\n", $crypto->log_tail()) . "'"
-                , 3);
+                $this->log("Failed to retrieve keys for '". $this->identity_tostring() ."'", 3);
                 return false;
             }
+
+            $this->identity = $row['identity'];
+            $this->realm = $row['realm'];
+            $this->email = $row['email'];
+            $this->id = (int)$row['id'];
+
+            $this->log("Identity data for '". $this->identity_tostring() ."' retrieved, " . sizeof($this->pubkeys) . " keys found", 1);
+            return true;
         }
 
         $this->log("Identity data for '". $this->identity_tostring() ."' not found", 2); // should not error out
