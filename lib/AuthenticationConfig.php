@@ -9,6 +9,7 @@
 class AuthenticationConfig {
     const DB_TABLE_NONCE_HISTORY = 'rd_nonce_history';
     const DB_TABLE_IDENTITIES = 'rd_identities';
+    const DB_TABLE_KEYS = 'rd_keys';
 
     const NONCE_TIMEFRAME = 300; // in seconds
 
