@@ -13,8 +13,9 @@ class AuthenticationConfig {
 
     const NONCE_TIMEFRAME = 300; // in seconds
 
-    const VALID_IDENTITY_REGEX = '/^[a-z0-9\s]{1,31}$/si';
-    const VALID_REALM_REGEX = '/^[a-z0-9\s]{1,63}$/si';
+    const VALID_IDENTITY_REGEX = '/^[a-z0-9\s]{1,32}$/si';
+    const VALID_REALM_REGEX = '/^[a-z0-9\s]{1,64}$/si';
+    const VALID_DEVICE_REGEX = '/^[a-z0-9\s]{1,32}$/si';
 
     const TOKEN_SEPARATOR = '|';
 }
