@@ -97,6 +97,7 @@ class Authentication extends Identity {
      * nonce            => unique nonce that was signed
      * nonce_identity   => identity responsible for signing the nonce
      * realm            => the realm for the identity
+     * device           => the device to associate nonce with
      * nonce_signature  => base64 encoded signature of 'nonce' key
      *
      * Deletes challenge upon successful verification or if challenge has expired
