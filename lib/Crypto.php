@@ -11,7 +11,7 @@ require_once (__DIR__).'/Object.php';
 class Crypto extends Object {
     const NONCE_HASH_ALGO = 'sha256';
     const THUMBPRINT_HASH_ALGO = 'sha1';
-    const SIG_ALGO = OPENSSL_ALGO_SHA256;
+    const SIG_ALGO = 'RSA-SHA256';
     const KEYGEN_KEYTYPE = OPENSSL_KEYTYPE_RSA;
 
     public $private_key = '';
@@ -34,7 +34,7 @@ class Crypto extends Object {
 
         if ($this->keygen == 0) {
             $this->get_openssl_errors();
-            $this->log("Keygen failed to create keypair",3);
+            $this->log("Keygen failed to create keypair", 3);
             return false;
         }
 
@@ -100,18 +100,18 @@ class Crypto extends Object {
         switch ($verify_result) {
             case 1:
                 $this->log("Signature is valid for '$data'", 1);
+                return true;
             break;
 
             case 0:
                 $this->log("Signature is invalid for '$data'", 1);
-            break;
-
-            default:
-                $this->log("Signature verification failed '$data' (return: $verify_result)", 3);
+                return false;
             break;
         }
 
-        return $verify_result;
+        $this->get_openssl_errors();
+        $this->log("Signature verification failed '$data' (return: $verify_result)", 3);
+        return false;
     }
 
     public function generate_nonce($nonce_identity, $seed = array(), $add_salt = true) {
@@ -134,7 +134,7 @@ class Crypto extends Object {
         }
 
         if ($resource != false) {
-            $this->log("Validation successful for '". $keytype ."' key", 1);
+            $this->log("Validation successful for '". $keytype ."' key (resource: " . $resource . ")", 1);
             openssl_free_key($resource);
             return true;
         }
