@@ -142,18 +142,18 @@ class Authentication extends Identity {
                     $valid = true;
                     $this->log("Authentication for device: '". $response['device'] ."', '". $response['nonce_identity'] ."@". $response['realm'] ."' successful. Nonce signature was valid.", 1);
 
-                    $this->delete_challenge($row['id']);
+                    $this->delete_challenges($response);
                 } else {
                     $this->log(
                         "Nonce signature was invalid for '". $response['nonce'] ."',"
                         ." identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'"
-                        ." crypto-log: '". join("\n", $crypto->log_tail()) ."'"
+                        ." crypto-log: '". json_encode($crypto->log_tail()) ."'"
                     , 3);
                 }
             } else {
                 $this->log("Time expired for nonce: '". $response['nonce'] ."', device: '". $response['device'] ."', identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'", 1);
 
-                $this->delete_challenge($row['id']);
+                $this->delete_challenges($response);
             }
         } else {
             $this->log("No nonce found for identity: '". $response['nonce_identity'] ."@". $response['realm'] ."', device: '". $response['device'] ."', within acceptable timeframe", 1);
@@ -165,22 +165,28 @@ class Authentication extends Identity {
     /**
      * Removes a challenge from the database
      *
-     * @param integer $id Challenge index in db
+     * @param integer $
      *
      * @return bool
      */
-    public function delete_challenge($id) {
-        $query = "delete from ". AuthenticationConfig::DB_TABLE_NONCE_HISTORY . " where id = :id";
+    public function delete_challenges($challenge) {
+        $query = "delete from ". AuthenticationConfig::DB_TABLE_NONCE_HISTORY
+                . " where   nonce_identity = :nonce_identity"
+                . " and     device = :device"
+                . " and     realm = :realm";
+
         $params = array(
-            ':id' => $id,
+            ':nonce_identity' => $challenge['nonce_identity'],
+            ':realm' => $challenge['realm'],
+            ':device' => $challenge['device'],
         );
 
-        if ($this->db->query($query, $params, $limit = 1)) {
-            $this->log("Successfully deleted challenge with id: '". $id ."'", 1);
+        if ($this->db->query($query, $params)) {
+            $this->log("Successfully deleted all challenges for '" . $this->identity_tostring() . "', device: " . $challenge['device'], 1);
             return true;
         }
 
-        $this->log("Failed to delete challenge with id: '". $id ."'", 3);
+        $this->log("Failed to delete challenges for '" . $this->identity_tostring() . "', device: " . $challenge['device'], 3);
         return false;
     }
 
