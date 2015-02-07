@@ -14,7 +14,7 @@ class Object {
     const LOG_WARN = 2;
     const LOG_ERROR = 3;
 
-    protected $db = null;
+    public $db = null;
 
     public $log_name = null;
 
