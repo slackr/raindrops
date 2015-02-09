@@ -117,16 +117,14 @@ class Registration extends Identity {
                 ':identity_id' => $this->id,
             );
 
-            $this->id = 0; // zero out in case of object reuse
-
             if ($this->db->query($query, $params)) {
-
                 $this->log("Successfully deleted keys for '". $this->identity_tostring() ."'", 1);
-                return true;
             } else {
-                $this->log("Identity was deleted but failed to delete keys for '". $this->identity_tostring() ."'", 3);
-                return false;
+                $this->log("Identity was deleted but failed to delete keys for '". $this->identity_tostring() ."'", 2);
             }
+
+            $this->id = 0; // zero out in case of object reuse
+            return true;
         }
 
         $this->log("Failed to delete identity '". $this->identity_tostring() ."'", 3);
