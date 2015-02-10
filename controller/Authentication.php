@@ -231,11 +231,14 @@ class Authentication extends Identity {
             $this->log("Invalid timestamp in token: '". $token ."' (timestamp: '". $timestamp ."')", 3);
             return false;
         }
+
+        $this->log('Token age: '. (time() - $timestamp), 0);
+
         if ((time() - $timestamp) > Config::TOKEN_TIMEFRAME) {
             $this->log("Token has expired: '". $token ."'", 3);
             return false;
         }
-
+        
         $this->generate_auth_token($seed);
 
         $new_pieces = explode(AuthenticationConfig::TOKEN_SEPARATOR, $this->token);
