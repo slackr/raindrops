@@ -31,13 +31,17 @@ class SessionHandler extends Object {
 
         if ($this->session_id != null) {
             if ($this->session_sanity_check()) {
-                session_id($this->session_id);
+
+                session_commit(); // end current session
+                session_id($this->session_id); // hijack specified session
+                session_start();
+
+                $this->log('Using session id: '. session_id(), 0);
             } else {
-                $this->log('Invalid session id ' . $this->session_tostring(), 3);
+                $this->log('Invalid session id '. $this->session_tostring(), 3);
                 return false;
             }
         }
-
         if (isset($_SESSION['rd_auth_identity'])) {
             $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
             if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
@@ -47,26 +51,27 @@ class SessionHandler extends Object {
                     $this->id = new \Raindrops\Identity($this->db, $_SESSION['rd_auth_identity'], $this->realm);
                     if (! $this->id->get_identity()) {
                         $this->id = null;
-                        $this->log('Failed to retrieve identity data ' . $this->session_tostring() . ': '. join('',$this->id->log_tail(1)), 3);
+                        $this->log('Failed to retrieve identity data '. $this->session_tostring() .': '. json_encode($this->id->log_tail(1)), 3);
                         return false;
                     }
                 }
+
+                $this->log($is_ro . 'Session is valid '. $this->session_tostring() .' ('. json_encode($auth->log_tail(5)) .')', 1);
+                return true;
             } else {
                 $this->id = null;
                 if (! $read_only) {
                     session_destroy();
+                    session_commit();
                     session_start();
                 }
 
-                $this->log($is_ro . 'Token verification failed ' . $this->session_tostring() . ': '. join('',$auth->log_tail(1)), 3);
+                $this->log($is_ro . 'Token verification failed '. $this->session_tostring() .': '. json_encode($auth->log_tail(1)), 3);
                 return false;
             }
-
-            $this->log($is_ro . 'Session is valid ' . $this->session_tostring(), 0);
-            return true;
         }
 
-        $this->log($is_ro . 'Session is invalid ' . $this->session_tostring(), 0);
+        $this->log($is_ro . 'Session is invalid '. $this->session_tostring(), 3);
         return false;
     }
 
