@@ -16,6 +16,8 @@ class SessionHandler extends Object {
     public $session_id = null;
     public $session_ip = null;
 
+    private $previous_session_id = null;
+
     public function __construct(& $db, $realm = null, $session_id = null, $session_ip = null) {
         $this->db = $db;
         $this->realm = $realm;
@@ -31,17 +33,13 @@ class SessionHandler extends Object {
 
         if ($this->session_id != null) {
             if ($this->session_sanity_check()) {
-
-                session_commit(); // end current session
-                session_id($this->session_id); // hijack specified session
-                session_start();
-
-                $this->log('Using session id: '. session_id(), 0);
+                $this->hijack_session($this->session_id);
             } else {
                 $this->log('Invalid session id '. $this->session_tostring(), 3);
                 return false;
             }
         }
+
         if (isset($_SESSION['rd_auth_identity'])) {
             $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
             if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
@@ -56,9 +54,13 @@ class SessionHandler extends Object {
                     }
                 }
 
+                $this->restore_previous_session();
+
                 $this->log($is_ro . 'Session is valid '. $this->session_tostring() .' ('. json_encode($auth->log_tail(5)) .')', 1);
                 return true;
             } else {
+                $this->restore_previous_session();
+
                 $this->id = null;
                 if (! $read_only) {
                     session_destroy();
@@ -71,14 +73,38 @@ class SessionHandler extends Object {
             }
         }
 
+        $this->restore_previous_session();
         $this->log($is_ro . 'Session is invalid '. $this->session_tostring(), 3);
         return false;
     }
 
+    function hijack_session($session_id) {
+        $this->log('Hijacking session: '. $session_id, 0);
+        $this->previous_session_id = session_id();
+        $this->swap_session($session_id);
+    }
 
-   function session_sanity_check() {
-       return preg_match('/^[a-z0-9]{26}$/i', $this->session_id);
-   }
+    function restore_previous_session() {
+        if ($this->previous_session_id) {
+            $this->log('Restoring to previous session: '. $this->previous_session_id, 0);
+            $this->swap_session($this->previous_session_id);
+        } else {
+            $this->log('No previous session to rstore', 0);
+        }
+
+    }
+
+    function swap_session($session_id) {
+        session_commit();
+        session_id($session_id);
+        session_start();
+
+        $this->log('Session swapped to: '. session_id(), 0);
+    }
+
+    function session_sanity_check() {
+        return preg_match('/^[a-z0-9]{26}$/i', $this->session_id);
+    }
 
     public function session_tostring() {
         return "(sid:". $this->session_id .",ip:". $this->session_ip .")";
