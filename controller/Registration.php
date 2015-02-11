@@ -29,10 +29,17 @@ class Registration extends Identity {
             return false;
         }
 
+        if (! $this->sanity_check()) {
+            $this->log("Sanity check failed for '". $this->identity_tostring() ."'", 3);
+            return false;
+        }
+
         if ($this->get_identity() == true) {
             $this->log("Identity '". $this->identity_tostring() ."' already exists", 3);
             return false;
         }
+
+        $this->email = $identity_data['email'];
 
         $query = "insert into ". AuthenticationConfig::DB_TABLE_IDENTITIES
                 ." values (:id, :identity, :password, :email, :timestamp, :realm)";
