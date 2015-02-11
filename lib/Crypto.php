@@ -25,7 +25,8 @@ class Crypto extends Object {
 
     public function generate_keypair() {
         $openssl_config = array(
-            'config' => getenv('OPENSSL_CONF'), // this is so stupid
+            //'config' => getenv('OPENSSL_CONF'), // this is so stupid
+            'config' => (__DIR__).'/openssl.cnf',
             'private_key_bits' => 2048,
             'private_key_type' => Crypto::KEYGEN_KEYTYPE,
         );
