@@ -22,7 +22,7 @@ class SessionHandler extends Object {
         $this->db = $db;
         $this->realm = $realm;
         $this->session_id = $session_id;
-        $this->session_ip = $session_ip;
+        $this->session_ip = ($session_ip ? $session_ip : $_SERVER['REMOTE_ADDR']);
     }
 
     public function verify($read_only = false) {
