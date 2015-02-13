@@ -89,9 +89,8 @@ class SessionHandler extends Object {
             $this->log('Restoring to previous session: '. $this->previous_session_id, 0);
             $this->swap_session($this->previous_session_id);
         } else {
-            $this->log('No previous session to rstore', 0);
+            $this->log('No previous session to restore', 0);
         }
-
     }
 
     function swap_session($session_id) {

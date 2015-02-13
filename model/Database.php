@@ -40,7 +40,7 @@ class Database extends Object {
         if ($limit != null) {
             switch ($this->pdo_driver) {
                 case 'sqlsrv':
-                    $query = preg_replace('/^(select|delete|update)\s+/si','$1 top('.$limit.') ', $query);
+                    $query = preg_replace('/^(select|delete|update)\s+/si','$1 top('. $limit .') ', $query);
                 break;
                 default: // mysql
                     $query .= " limit $limit";
@@ -50,7 +50,7 @@ class Database extends Object {
 
         $this->sth = $this->dbh->prepare($query);
         if (!$this->sth) {
-            $this->log("Error preparing query(): ".$this->sql_error_info($this->dbh, $query), 3);
+            $this->log("Error preparing query(): ". $this->sql_error_info($this->dbh, $query), 3);
             return false;
         }
 
@@ -63,7 +63,7 @@ class Database extends Object {
             return true;
         }
 
-        $this->log("Error executing query(): ".$this->sql_error_info($this->sth, $query), 3);
+        $this->log("Error executing query(): ". $this->sql_error_info($this->sth, $query), 3);
         return false;
     }
 
@@ -114,7 +114,8 @@ class Database extends Object {
         try {
             $this->dbh = new PDO($this->dsn, $this->username, $this->password, $this->options);
             if ($this->dbh) {
-                $this->log("Successfully connected to database: ".$this->dsn, 1);
+                $this->log("Database DSN: ".$this->dsn, 0);
+                $this->log("Successfully connected to database", 1);
                 $this->connected = true;
             }
         }
