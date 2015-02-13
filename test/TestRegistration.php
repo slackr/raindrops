@@ -18,7 +18,7 @@ $badpubkey = 'u wot m8';
 $db = new Database('mysql');
 $db->connect();
 
-$sfr_exists = new Registration($db, 'test', 'slacknet');
+$sfr_exists = new Registration($db, 'test', 'parallax');
 $sfr = new Registration($db, 'newtest', 'chattr');
 
 $good_id = array(
