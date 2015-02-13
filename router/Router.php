@@ -13,6 +13,10 @@ class Router extends Object {
     public $routes = array();
 
     public function __construct() {
+        if (! isset($_SERVER['REDIRECT_URL'])) {
+            $_SERVER['REDIRECT_URL'] = $_SERVER['REQUEST_URI'];
+        }
+
         $get = explode('/', substr($_SERVER['REDIRECT_URL'], 1));
         $this->request_action = preg_replace('/[^a-z0-9\_\-]+/i', '', $get[0]);
 
