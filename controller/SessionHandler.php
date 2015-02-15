@@ -48,8 +48,8 @@ class SessionHandler extends Object {
 
                     $this->id = new \Raindrops\Identity($this->db, $_SESSION['rd_auth_identity'], $this->realm);
                     if (! $this->id->get_identity()) {
-                        $this->id = null;
                         $this->log('Failed to retrieve identity data '. $this->session_tostring() .': '. json_encode($this->id->log_tail(1)), 3);
+                        $this->id = null;
                         return false;
                     }
                 }
