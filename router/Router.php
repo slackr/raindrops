@@ -10,6 +10,7 @@ require_once (__DIR__).'/../lib/Object.php';
 
 class Router extends Object {
     public $request_action = null;
+    public $secondary_action = null;
     public $routes = array();
 
     public function __construct() {
@@ -17,14 +18,14 @@ class Router extends Object {
             $_SERVER['REDIRECT_URL'] = $_SERVER['REQUEST_URI'];
         }
 
-        $get = explode('/', substr($_SERVER['REDIRECT_URL'], 1));
-        $this->request_action = preg_replace('/[^a-z0-9\_\-]+/i', '', $get[0]);
-
+        $get = explode('/', substr($_SERVER['REDIRECT_URL'], 1), 2);
+        $this->request_action = preg_replace('/[^a-z0-9\_\-\.]+/i', '', $get[0]);
+        $this->secondary_action = $get[1];
         $this->log("Request action parsed: '". $this->request_action ."'", 1);
     }
 
     public function add_route($destination, $data = array(), $callback) {
-        $destination = preg_replace('/[^a-z0-9\_\-\*\!]+/i', '', $destination);
+        $destination = preg_replace('/[^a-z0-9\_\-\.\*\!]+/i', '', $destination);
         $this->routes[$destination] = array(
             'data' => $data,
             'callback' => $callback,
