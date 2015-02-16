@@ -63,9 +63,7 @@ class SessionHandler extends Object {
 
                 $this->id = null;
                 if (! $read_only) {
-                    session_destroy();
-                    session_commit();
-                    session_start();
+                    $this->destroy();
                 }
 
                 $this->log($is_ro . 'Token verification failed '. $this->session_tostring() .': '. json_encode($auth->log_tail(1)), 3);
@@ -78,13 +76,22 @@ class SessionHandler extends Object {
         return false;
     }
 
-    function hijack_session($session_id) {
+    public function logout() {
+        $this->destroy();
+    }
+    public function destroy() {
+        session_destroy();
+        session_commit();
+        session_start();
+    }
+
+    public function hijack_session($session_id) {
         $this->log('Hijacking session: '. $session_id, 0);
         $this->previous_session_id = session_id();
         $this->swap_session($session_id);
     }
 
-    function restore_previous_session() {
+    public function restore_previous_session() {
         if ($this->previous_session_id) {
             $this->log('Restoring to previous session: '. $this->previous_session_id, 0);
             $this->swap_session($this->previous_session_id);
@@ -93,7 +100,7 @@ class SessionHandler extends Object {
         }
     }
 
-    function swap_session($session_id) {
+    public function swap_session($session_id) {
         session_commit();
         session_id($session_id);
         session_start();
@@ -101,7 +108,7 @@ class SessionHandler extends Object {
         $this->log('Session swapped to: '. session_id(), 0);
     }
 
-    function session_sanity_check() {
+    public function session_sanity_check() {
         return preg_match('/^[a-z0-9]{26}$/i', $this->session_id);
     }
 
