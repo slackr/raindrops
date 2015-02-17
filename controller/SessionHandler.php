@@ -13,16 +13,18 @@ require_once (__DIR__).'/../controller/Identity.php';
 class SessionHandler extends Object {
     public $id = null;
     public $realm = null;
+    public $identity = null;
     public $session_id = null;
     public $session_ip = null;
 
     private $previous_session_id = null;
 
-    public function __construct(& $db, $realm = null, $session_id = null, $session_ip = null) {
+    public function __construct(& $db, $realm = null, $session_id = null, $session_ip = null, $identity = null) {
         $this->db = $db;
         $this->realm = $realm;
         $this->session_id = $session_id;
         $this->session_ip = ($session_ip ? $session_ip : $_SERVER['REMOTE_ADDR']);
+        $this->identity = ($identity ? $identity : $_SESSION['rd_auth_identity']);
     }
 
     public function verify($read_only = false) {
@@ -41,33 +43,37 @@ class SessionHandler extends Object {
         }
 
         if (isset($_SESSION['rd_auth_identity'])) {
-            $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
-            if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
-                if (! $read_only) {
-                    $_SESSION['rd_auth_token'] = $auth->token; // update token to renew timestamp
+            if ($_SESSION['rd_auth_identity'] === $this->identity) {
+                $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
+                if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
+                    if (! $read_only) {
+                        $_SESSION['rd_auth_token'] = $auth->token; // update token to renew timestamp
 
-                    $this->id = new \Raindrops\Identity($this->db, $_SESSION['rd_auth_identity'], $this->realm);
-                    if (! $this->id->get_identity()) {
-                        $this->log('Failed to retrieve identity data '. $this->session_tostring() .': '. json_encode($this->id->log_tail(1)), 3);
-                        $this->id = null;
-                        return false;
+                        $this->id = new \Raindrops\Identity($this->db, $_SESSION['rd_auth_identity'], $this->realm);
+                        if (! $this->id->get_identity()) {
+                            $this->log('Failed to retrieve identity data '. $this->session_tostring() .': '. json_encode($this->id->log_tail(1)), 3);
+                            $this->id = null;
+                            return false;
+                        }
                     }
+
+                    $this->restore_previous_session();
+
+                    $this->log($is_ro .'Session is valid '. $this->session_tostring() .' ('. json_encode($auth->log_tail(5)) .')', 1);
+                    return true;
+                } else {
+                    $this->restore_previous_session();
+
+                    $this->id = null;
+                    if (! $read_only) {
+                        $this->destroy();
+                    }
+
+                    $this->log($is_ro . 'Token verification failed '. $this->session_tostring() .': '. json_encode($auth->log_tail(1)), 3);
+                    return false;
                 }
-
-                $this->restore_previous_session();
-
-                $this->log($is_ro . 'Session is valid '. $this->session_tostring() .' ('. json_encode($auth->log_tail(5)) .')', 1);
-                return true;
             } else {
-                $this->restore_previous_session();
-
-                $this->id = null;
-                if (! $read_only) {
-                    $this->destroy();
-                }
-
-                $this->log($is_ro . 'Token verification failed '. $this->session_tostring() .': '. json_encode($auth->log_tail(1)), 3);
-                return false;
+                $this->log($is_ro ."Session identity does not match input: '". $this->identity ."' != '". $_SESSION['rd_auth_identity'] ."'", 3);
             }
         }
 
