@@ -89,6 +89,7 @@ class SessionHandler extends Object {
         session_destroy();
         session_commit();
         session_start();
+        $this->log('Session '. $this->session_id .' destroyed', 1);
     }
 
     public function hijack_session($session_id) {
