@@ -52,6 +52,19 @@ $response = array(
 $verify = $sfa->verify_challenge_response($response);
 assert('$verify == true', 'Challenge did not verify');
 
+$sfa->log_name = 'sfa_non_auth';
+$sfa->create_challenge($device, $action = 'non_auth');
+$response = array(
+    'nonce' => $sfa->challenge,
+    'nonce_identity' => 'test',
+    'realm' => $sfa->realm,
+    'device' => $device,
+    'nonce_action' => 'non_auth',
+);
+
+$verify = $sfa->verify_challenge_response($response);
+assert('$verify == true', 'Non-Auth challenge did not verify');
+
 $sfa_invalid = new Authentication($db, "invalid!", "badidrealm");
 $sfa_invalid->log_name = 'sfa_invalid';
 $sfa_invalid->email = 'invalid!@email';
