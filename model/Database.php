@@ -56,6 +56,11 @@ class Database extends Object {
 
         $this->rows_affected = 0;
         $this->query = $this->sth->queryString;
+
+        if (sizeof($params) > 0) {
+            $this->query .= ' (Parameters: '. json_encode($params) .')';
+        }
+
         $ret = $this->sth->execute($params);
         if ($ret) {
             $this->rows_affected = $this->sth->rowCount();
