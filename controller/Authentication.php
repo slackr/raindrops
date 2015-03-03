@@ -95,11 +95,12 @@ class Authentication extends Identity {
     /**
      * Verify response to a challenge containing these parameters:
      *
-     * nonce            => unique nonce that was signed
+     * nonce            => unique string that was signed
      * nonce_identity   => identity responsible for signing the nonce
      * realm            => the realm for the identity
      * device           => the device to associate nonce with
      * nonce_signature  => base64 encoded signature of 'nonce' key
+     * nonce_action     => (optional) challenge action if not 'auth'
      *
      * Deletes challenge upon successful verification or if challenge has expired
      *
