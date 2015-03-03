@@ -54,7 +54,8 @@ class Authentication extends Identity {
      * @return bool
      */
     public function create_challenge($device, $action = 'auth', $seed = array()) {
-        if (! isset($this->pubkeys[$device])) {
+        if ($action == 'auth'
+            && ! isset($this->pubkeys[$device])) {
             $this->log("No pubkey associated with device: '" . $device . "' for '". $this->identity_tostring() ."'", 3);
             return false;
         }
@@ -109,13 +110,14 @@ class Authentication extends Identity {
      * @return bool
      */
     public function verify_challenge_response($response) {
-        if (! isset($this->pubkeys[$response['device']])) {
-            $this->log("No pubkey associated with device: '" . $response['device'] . "' for '". $this->identity_tostring() ."'", 3);
-            return false;
-        }
-
         if (! isset($response['nonce_action'])) {
             $response['nonce_action'] = 'auth';
+        }
+
+        if ($response['nonce_action'] == 'auth'
+            && ! isset($this->pubkeys[$response['device']])) {
+            $this->log("No pubkey associated with device: '" . $response['device'] . "' for '". $this->identity_tostring() ."'", 3);
+            return false;
         }
 
         $pubkey = $this->pubkeys[$response['device']];
