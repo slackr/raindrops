@@ -116,10 +116,14 @@ class Crypto extends Object {
     }
 
     public function generate_nonce($nonce_identity, $seed = array(), $add_salt = true) {
-        $nonce = ($add_salt ? mcrypt_create_iv(16) : '') . $nonce_identity . join('', $seed);
+        $nonce = ($add_salt ? $this->new_iv(8) : '') . $nonce_identity . join('', $seed);
 
         $this->nonce = hash(Crypto::NONCE_HASH_ALGO, $nonce, false);
         return true;
+    }
+
+    public function new_iv($size = 16) {
+        return bin2hex(mcrypt_create_iv($size));
     }
 
     public function validate_key(& $key, $keytype = 'public') {
