@@ -50,10 +50,11 @@ class Authentication extends Identity {
      * @param string $device Which device to associate challenge with
      * @param string $action Which action to associate challenge with
      * @param array $seed (optional) Array to use as seed for nonce
+     * @param bool $add_salt (optional) Add salt to nonce?
      *
      * @return bool
      */
-    public function create_challenge($device, $action = 'auth', $seed = array()) {
+    public function create_challenge($device, $action = 'auth', $seed = array(), $add_salt = true) {
         if ($action == 'auth'
             && ! isset($this->pubkeys[$device])) {
             $this->log("No pubkey associated with device: '" . $device . "' for '". $this->identity_tostring() ."'", 3);
@@ -63,7 +64,7 @@ class Authentication extends Identity {
         $crypto = new Crypto();
         $timestamp = date(Config::DATE_FORMAT);
 
-        $crypto->generate_nonce($this->identity, $seed);
+        $crypto->generate_nonce($this->identity, $seed, $add_salt);
 
         $query = "insert into ". AuthenticationConfig::DB_TABLE_NONCE_HISTORY
                 ." values (:id, :nonce, :nonce_identity, :timestamp, :realm, :device, :nonce_action)";
@@ -155,11 +156,8 @@ class Authentication extends Identity {
                         $this->delete_challenges($response);
                     } else {
                         $valid = false;
-                        $this->log(
-                            "Nonce signature is invalid for '". $response['nonce'] ."',"
-                            ." identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'"
-                            ." crypto-log: '". json_encode($crypto->log_tail()) ."'"
-                        , 3);
+                        $this->log("Crypto-log: ". json_encode($crypto->log_tail()), 0);
+                        $this->log("Nonce signature is invalid for '". $response['nonce'] ."', identity: '". $response['nonce_identity'] ."@". $response['realm'] ."'", 3);
                     }
                 } else {
                     $this->delete_challenges($response);

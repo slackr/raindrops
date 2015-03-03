@@ -13,6 +13,7 @@ require_once (__DIR__).'/../controller/Identity.php';
 require_once (__DIR__).'/../model/Database.php';
 
 class Registration extends Identity {
+    public $recovery_token = null;
 
     public function __construct(& $db, $identity, $realm, $id = 0) {
         $this->db = $db;
@@ -35,8 +36,40 @@ class Registration extends Identity {
         }
 
         if ($this->get_identity() == true) {
-            $this->log("Identity '". $this->identity_tostring() ."' already exists", 3);
-            return false;
+            if (isset($identity_data['recovery_token'])) {
+                $recovery_token = $identity_data['recovery_token'];
+                $device = $identity_data['device'];
+
+                if (! $this->is_device_valid($device)) {
+                    $this->log("Invalid device supplied for '". $this->identity_tostring() ."'", 3);
+                    return false;
+                }
+
+                $crypto = new Crypto();
+                $auth = new Authentication($this->db, $this->identity, $this->realm);
+                $crypto->generate_nonce($this->identity, array($recovery_token), false);
+
+                $recovery_response = array(
+                    'nonce' => $crypto->nonce,
+                    'nonce_identity' => $this->identity,
+                    'realm' => $this->realm,
+                    'device' => $device,
+                    'nonce_action' => 'recovery',
+                );
+
+                if ($auth->verify_challenge_response($recovery_response)) {
+                    return $this->add_pubkey($device, $identity_data['pubkey']);
+                } else {
+                    $this->log("Auth log: ". json_encode($auth->log_tail()), 0);
+                    $this->log("Crypto log: ". json_encode($crypto->log_tail()), 0);
+                    $this->log("Identity recovery denied for '". $this->identity_tostring() ."', recovery token failed to verify", 3);
+                    return false;
+                }
+
+            } else {
+                $this->log("Identity '". $this->identity_tostring() ."' already exists and no recovery token was specified.", 3);
+                return false;
+            }
         }
 
         $this->email = $identity_data['email'];
@@ -135,6 +168,37 @@ class Registration extends Identity {
         }
 
         $this->log("Failed to delete identity '". $this->identity_tostring() ."'", 3);
+        return false;
+    }
+
+    public function generate_recovery_token($device, $email) {
+        if (! $this->get_identity()) {
+            $this->log("Identity does not exist: '". $this->identity_tostring() ."'", 3);
+            return false;
+        }
+
+        if (! $this->is_device_valid($device)) {
+            $this->log("Invalid device supplied for '". $this->identity_tostring() ."'", 3);
+            return false;
+        }
+
+        if ($this->email !== $email) {
+            $this->log("Identity email mismatch '". $email ."' != '". $this->email ."'", 3);
+            return false;
+        }
+
+        $crypto = new Crypto();
+
+        $this->recovery_token = $crypto->new_iv(4);
+        //$this->log("Recovery token: '". $this->recovery_token ."'", 0);
+
+        $auth = new Authentication($this->db, $this->identity, $this->realm);
+        if ($auth->create_challenge($device, $action = 'recovery', array($this->recovery_token), $add_salt = false)) {
+            $this->log("Successfully created recovery challenge for '". $this->identity_tostring() ."'", 1);
+            return true;
+        }
+
+        $this->log("Failed to create recovery challenge for '". $this->identity_tostring() ."'", 3);
         return false;
     }
 
