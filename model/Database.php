@@ -68,7 +68,7 @@ class Database extends Object {
             return true;
         }
 
-        $this->log("Error executing query(): ". $this->sql_error_info($this->sth, $query), 3);
+        $this->log("Error executing query(): ". $this->sql_error_info($this->sth, $this->query), 3);
         return false;
     }
 

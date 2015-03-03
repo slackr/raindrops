@@ -36,7 +36,7 @@ class Registration extends Identity {
         }
 
         if ($this->get_identity() == true) {
-            if (isset($identity_data['recovery_token'])) {
+            if ($identity_data['recovery_token']) {
                 $recovery_token = $identity_data['recovery_token'];
                 $device = $identity_data['device'];
 
@@ -130,6 +130,20 @@ class Registration extends Identity {
         );
 
         if ($this->db->query($query, $params)) {
+            $query = "delete from ". AuthenticationConfig::DB_TABLE_KEYS
+                    ." where identity_id = :identity_id and device = :device and timestamp <> :timestamp";
+
+            $params = array(
+                ':identity_id' => $this->id,
+                ':device' => $device,
+                ':timestamp' => $timestamp,
+            );
+            if ($this->db->query($query, $params)) {
+                $this->log("Successfully deleted old pubkeys for device: ". $device .", identity '". $this->identity_tostring() ."'", 1);
+            } else {
+                $this->log("Failed to delete old pubkeys for device: ". $device .", identity '". $this->identity_tostring() ."'", 2);
+            }
+
             $this->log("Successfully added pubkey to identity '". $this->identity_tostring() ."'", 1);
             return true;
         }
