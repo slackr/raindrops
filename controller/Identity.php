@@ -93,13 +93,13 @@ class Identity extends Object {
         $valid_identity = false;
 
         if (preg_match(AuthenticationConfig::VALID_IDENTITY_REGEX, $this->identity)) {
-            $this->log("Identity input passed sanity check: '". $this->identity ."'", 1);
+            $this->log("Identity input passed sanity check: '". $this->identity ."'", 0);
             $valid_identity = true;
         } else {
             $this->log("Identity input sanity check failed: '". $this->identity ."'", 3);
         }
         if (preg_match(AuthenticationConfig::VALID_REALM_REGEX, $this->realm)) {
-            $this->log("Realm input passed sanity check: '". $this->realm ."'", 1);
+            $this->log("Realm input passed sanity check: '". $this->realm ."'", 0);
             $valid_realm = true;
         } else {
             $this->log("Realm input sanity check failed: '". $this->realm ."'", 3);
