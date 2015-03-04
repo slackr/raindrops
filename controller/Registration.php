@@ -187,17 +187,17 @@ class Registration extends Identity {
 
     public function generate_recovery_token($device, $email) {
         if (! $this->get_identity()) {
-            $this->log("Identity does not exist: '". $this->identity_tostring() ."'", 3);
+            $this->log("Identity invalid", 3);
             return false;
         }
 
         if (! $this->is_device_valid($device)) {
-            $this->log("Invalid device supplied for '". $this->identity_tostring() ."'", 3);
+            $this->log("Invalid device", 3);
             return false;
         }
 
         if ($this->email !== $email) {
-            $this->log("Identity email mismatch '". $email ."' != '". $this->email ."'", 3);
+            $this->log("Identity email mismatch", 3);
             return false;
         }
 
