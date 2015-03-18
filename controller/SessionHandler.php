@@ -43,7 +43,7 @@ class SessionHandler extends Object {
         }
 
         if (isset($_SESSION['rd_auth_identity'])) {
-            if ($_SESSION['rd_auth_identity'] === $this->identity) {
+            if ($_SESSION['rd_auth_identity'] == $this->identity) {
                 $auth = new \Raindrops\Authentication($this->db, $_SESSION['rd_auth_identity'], $this->realm);
                 if ($auth->verify_auth_token($_SESSION['rd_auth_token'], $seed)) {
                     if (! $read_only) {
