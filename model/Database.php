@@ -42,7 +42,7 @@ class Database extends Object {
                 case 'sqlsrv':
                     $query = preg_replace('/^(select|delete|update)\s+/si','$1 top('. $limit .') ', $query);
                 break;
-                default: // mysql
+                default:
                     $query .= " limit $limit";
                 break;
             }
@@ -111,6 +111,9 @@ class Database extends Object {
             break;
             case 'sqlsrv':
                 $driver_dsn = 'sqlsrv:server='.$this->db_host.''.($this->db_port ? ','.$this->db_port : '').';database='.$this->db_name;
+            break;
+            case 'sqlite':
+                $driver_dsn = 'sqlite:'.$this->db_name;
             break;
         }
         $this->options = $driver_options;

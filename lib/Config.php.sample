@@ -21,7 +21,7 @@ class Config {
 }
 
 class DatabaseConfig {
-    const DB_NAME = 'SQLSERVER';
+    const DB_NAME = 'SQLSERVER'; // '/path/to/db.sqlite3'
     const DB_HOST = '127.0.0.1\DB1';
     const DB_USER = 'sa';
     const DB_PASS = 'password';
