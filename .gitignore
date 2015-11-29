@@ -1,2 +1,3 @@
 lib/Config.php
 test/phpinfo.php
+model/skndev.sqlite3
