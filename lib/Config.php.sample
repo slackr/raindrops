@@ -18,6 +18,9 @@ class Config {
     const DATE_FORMAT = 'Y-m-d H:i:s';  // should be compatible with MSSQL/MySQL string->datetime conversion
 
     const TOKEN_TIMEFRAME = 3600;
+
+    const SENDGRID_API_URL = 'https://api.sendgrid.com/';
+    const SENDGRID_API_KEY = ''; // if set, will use SendGrid for email communication
 }
 
 class DatabaseConfig {
