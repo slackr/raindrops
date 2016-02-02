@@ -19,7 +19,7 @@ $id = 'test';
 $device = 'dev';
 
 $sfc = new Crypto();
-$db = new Database('mysql');
+$db = new Database('sqlite');
 $db->connect();
 
 $sfa = new Authentication($db, $id, $realm);
@@ -92,7 +92,7 @@ $sfa->log_name = 'sfa_good_token';
 $check_good = $sfa->verify_auth_token($good_token, $seed);
 assert('$check_good == true', 'Good token did not verify');
 
-$gbi = new Identity($db, null, null, 1);
+$gbi = new Identity($db, null, null, 102);
 $gbi->log_name = 'gbi';
 $gbi->get_identity();
 assert('$gbi->identity == "test"', 'Failed to get identity by id');
