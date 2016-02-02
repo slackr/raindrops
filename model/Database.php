@@ -26,13 +26,13 @@ class Database extends Object {
     private $fetch_style = PDO::FETCH_ASSOC;
     private $sth = null;
     private $dbh = null;
-    private $pdo_driver = 'mysql';
+    private $pdo_driver = 'sqlite';
 
     public $query = '';
     public $connected = false;
     public $rows_affected = 0;
 
-    public function __construct($pdo_driver = 'mysql') {
+    public function __construct($pdo_driver = 'sqlite') {
         $this->pdo_driver = $pdo_driver;
     }
 
