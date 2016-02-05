@@ -122,20 +122,5 @@ class SessionHandler extends Object {
     public function session_tostring() {
         return "(sid:". $this->session_id .",ip:". $this->session_ip .")";
     }
-
-    public function clean_xff_header($xff) {
-        $hosts = explode(',', $xff);
-        $a = [];
-
-        for ($h = 0; $h < sizeof($hosts); $h++) {
-            $a = explode(':', $hosts[$h]);
-            $hosts[$h] = $a[0];
-        }
-
-        $clean_xff = implode(',', $hosts);
-
-        $this->log("XFF clean: '". $xff ."' -> '". $clean_xff ."'", 0);
-        return $clean_xff;
-    }
 }
 ?>

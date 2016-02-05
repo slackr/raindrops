@@ -54,5 +54,27 @@ class Object {
         return $x[$num-1];
     }
 
+
+    /**
+     * removes port numbers from XFF header
+     *
+     * 127.0.0.1, 127.0.0.2:1234 -> 127.0.0.1, 127.0.0.2
+     * 127.0.0.1:1234 -> 127.0.0.0.1
+     */
+    public function clean_xff_header($xff) {
+        $hosts = explode(',', $xff);
+        $a = [];
+
+        for ($h = 0; $h < sizeof($hosts); $h++) {
+            $a = explode(':', $hosts[$h]);
+            $hosts[$h] = $a[0];
+        }
+
+        $clean_xff = implode(',', $hosts);
+
+        $this->log("XFF clean: '". $xff ."' -> '". $clean_xff ."'", 0);
+        return $clean_xff;
+    }
+
 }
 ?>
