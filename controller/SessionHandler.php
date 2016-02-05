@@ -15,20 +15,20 @@ class SessionHandler extends Object {
     public $realm = null;
     public $identity = null;
     public $session_id = null;
-    public $session_ip = null;
+    public $session_seed = null;
 
     private $previous_session_id = null;
 
-    public function __construct(& $db, $realm = null, $session_id = null, $session_ip = null, $identity = null) {
+    public function __construct(& $db, $realm = null, $session_id = null, $session_seed = null, $identity = null) {
         $this->db = $db;
         $this->realm = $realm;
         $this->session_id = $session_id;
-        $this->session_ip = ($session_ip ? $session_ip : $_SERVER['REMOTE_ADDR']);
+        $this->session_seed = $session_seed;
         $this->identity = ($identity ? $identity : $_SESSION['rd_auth_identity']);
     }
 
     public function verify($read_only = false) {
-        $seed = array($this->session_ip);
+        $seed = array($this->session_seed);
         $is_ro = ($read_only ? '(read_only) ' : '');
 
         $this->id = null;
