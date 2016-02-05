@@ -120,7 +120,7 @@ class SessionHandler extends Object {
     }
 
     public function session_tostring() {
-        return "(sid:". $this->session_id .",ip:". $this->session_ip .")";
+        return "(sid:". $this->session_id .",ip:". $this->session_seed .")";
     }
 }
 ?>
